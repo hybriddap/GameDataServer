@@ -1,0 +1,5 @@
+# Ignore a specific file
+/include/credentials.h
+
+# Ignore all files in a folder
+# folder_name/*

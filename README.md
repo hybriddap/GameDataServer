@@ -1,6 +1,6 @@
 This is a work in progress server for a game I'm working on, built in Unity.
 
-The server runs on PORT 4444 currently.
+The server runs on PORT 49157 currently.
 
 It simply just returns data to the client, doesn't accept any input from the clients.
 
