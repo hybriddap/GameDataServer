@@ -14,6 +14,7 @@
 
 #include "server.h"
 #include "inputHandler.h"
+#include "sqlHandler.h"
 
 struct sockaddr_in serv_addr, cli_addr;
 
@@ -32,9 +33,27 @@ void error(const char *msg)
 
 void writeClient(int newsockfd,char *msg)
 {
-    //char* msg="I got your message\n";
-    int result = write(newsockfd,msg,strlen(msg));
+    if(msg!=NULL)   //for custom messages
+    {
+        int result = write(newsockfd,msg,strlen(msg));
+        if (result < 0) error("ERROR writing to socket");
+        return;
+    }
+
+    //for actual sql messages
+    int dbRes = connectToDataBase();
+    if(dbRes)
+        return;
+    int queryRes = executeQuery("SELECT id, name, score FROM leaderboard");
+    if(queryRes)
+        return;
+    char * queryMsg = formatResult();
+    closeConnection();
+    
+    //send data over tcp
+    int result = write(newsockfd,queryMsg,strlen(queryMsg));
     if (result < 0) error("ERROR writing to socket");
+    free(queryMsg); //free from memory
 }
 
 void readClient(int newsockfd)
@@ -51,6 +70,7 @@ void bindSocket()
         sizeof(serv_addr)) < 0) 
         error("ERROR on binding");
     listen(sockfd,5);
+    printer("Server Listening...",0);
 }
 
 void acceptClients()
@@ -107,7 +127,7 @@ void serverFunctionality()
     
     //write to client
     if(canRun)
-        writeClient(newsockfd,"Heres the data:\n");
+        writeClient(newsockfd,NULL);
 
     //close socket
     close(newsockfd);
